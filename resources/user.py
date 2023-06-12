@@ -38,8 +38,10 @@ class UserRegister(MethodView):
     @blp.arguments(UserRegisterSchema)
     def post(self, user_data):
         if UserModel.query.filter(
-            or_(UserModel.username == user_data["username"], 
-                UserModel.email == user_data["email"])).first():
+            or_(
+                UserModel.username == user_data["username"],
+                UserModel.email == user_data["email"]
+            )).first():
             abort(409, message="A user with that username or email already exists.")
 
         user = UserModel(
