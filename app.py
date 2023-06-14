@@ -1,16 +1,16 @@
-from flask import Flask
+import os
+import redis
+
+from flask import Flask, jsonify
 from flask_smorest import Api
 from flask_jwt_extended import JWTManager
-from flask import Flask, jsonify
 from blocklist import BLOCKLIST
 from flask_migrate import Migrate
 from dotenv import load_dotenv
-
-import os
-import secrets
-
+from rq import Queue
 from db import db
-import models
+
+import secrets
 
 from resources.user import blp as UserBlueprint
 from resources.item import blp as ItemBlueprint
@@ -21,6 +21,11 @@ from resources.tag import blp as TagBlueprint
 def create_app(db_url=None):
     app = Flask(__name__)
     load_dotenv()
+    
+    connection = redis.from_url(
+        os.getenv("REDIS_URL")
+    )
+    app.queue = Queue("emails", connection=connection)
     app.config["PROPAGATE_EXCEPTIONS"] = True
     app.config["API_TITLE"] = "Stores REST API"
     app.config["API_VERSION"] = "v1"
@@ -36,7 +41,8 @@ def create_app(db_url=None):
     migrate = Migrate(app, db)
     api = Api(app)
     
-    app.config["JWT_SECRET_KEY"] = str(secrets.SystemRandom().getrandbits(128))
+    # app.config["JWT_SECRET_KEY"] = str(secrets.SystemRandom().getrandbits(128))
+    app.config["JWT_SECRET_KEY"] = "bhawna"
     jwt = JWTManager(app)
     
     @jwt.additional_claims_loader
